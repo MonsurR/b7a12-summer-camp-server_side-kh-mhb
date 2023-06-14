@@ -54,6 +54,7 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
 
         const userCollection = client.db('sterio').collection('user');
+        const productCollection = client.db('sterio').collection('product');
 
         app.put('/user', async (req, res) => {
             await client.connect();
@@ -115,6 +116,14 @@ async function run() {
             res.send({ isSeller: req?.role === 'Seller', verified: req.verified });
 
         })
+        app.post('/productadd', async (req, res) => {
+            await client.connect();
+            const data = req.body;
+            data.date = new Date(Date.now()).toISOString();
+            const resut = await productCollection.insertOne(data);
+            res.send(resut);
+        })
+
 
 
     } finally {
