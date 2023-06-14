@@ -96,6 +96,21 @@ async function run() {
             }
             next();
         }
+        const verifyAdmin = async (req, res, next) => {
+            // console.log(req.query.email)
+            await client.connect();
+
+            const email = req.query.email;
+            const query = { email: email };
+            const user = await userCollection.findOne(query);
+            if (user?.role !== 'admin') {
+
+                req.role = ''
+            } else {
+                req.role = 'admin'
+            }
+            next();
+        }
 
         app.get('/jwt', async (req, res) => {
             await client.connect();
@@ -123,7 +138,26 @@ async function run() {
             const resut = await productCollection.insertOne(data);
             res.send(resut);
         })
+        app.get('/product', verifyJWT, async (req, res) => {
+            await client.connect();
 
+            const email = req.query.email;
+
+            if (email !== req.decoded.email) {
+                res.status(403).send({ message: 'forbidden access' })
+            }
+            const query = {
+                email: email
+            }
+            const products = await productCollection.find(query).toArray();
+            res.send(products);
+        })
+        app.get('/user/admin', verifyAdmin, async (req, res) => {
+            // console.log(req?.role)
+            await client.connect();
+            res.send({ isAdmin: req?.role === 'admin' });
+
+        })
 
 
     } finally {
