@@ -55,8 +55,6 @@ async function run() {
 
         const userCollection = client.db('sterio').collection('user');
 
-
-
         app.put('/user', async (req, res) => {
             await client.connect();
             const user = req.body;
@@ -77,6 +75,47 @@ async function run() {
 
 
         })
+        const verifySeller = async (req, res, next) => {
+            await client.connect();
+            // console.log(req.query.email)
+            const email = req.query.email;
+            const query = { email: email };
+            const user = await userCollection.findOne(query);
+            if (user?.role !== 'Seller') {
+
+                req.role = ''
+                req.verified = false
+            } else {
+                req.verified = false
+                req.role = 'Seller'
+                // console.log(user.verifiedSeller)
+                if (user.verifiedSeller) {
+                    req.verified = true
+                }
+            }
+            next();
+        }
+
+        app.get('/jwt', async (req, res) => {
+            await client.connect();
+            const email = req.query.email;
+            const query = { email: email }
+            const user = await userCollection.findOne(query)
+            // console.log(user)
+            if (user) {
+                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN);
+                return res.send({ accessToken: token })
+            }
+
+            res.status(403).send({ accessToken: '' })
+        })
+        app.get('/user/seller', verifySeller, async (req, res) => {
+            // console.log(req?.role, req.verified)
+            await client.connect();
+            res.send({ isSeller: req?.role === 'Seller', verified: req.verified });
+
+        })
+
 
     } finally {
         // Ensures that the client will close when you finish/error
