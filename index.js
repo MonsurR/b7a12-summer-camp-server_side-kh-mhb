@@ -149,6 +149,20 @@ async function run() {
             console.log(products);
             res.send(products);
         })
+        app.get('/myenrolled', verifyJWT, async (req, res) => {
+            await client.connect();
+            const email = req.query.email;
+            console.log("in myslected")
+            if (email !== req.decoded.email) {
+                res.status(403).send({ message: 'forbidden access' })
+            }
+            const query = {
+                studentemail: email
+            }
+            const products = await enrolledcollection.find(query).toArray();
+            console.log(products);
+            res.send(products);
+        })
         app.get('/jwt', async (req, res) => {
             await client.connect();
             const email = req.query.email;
@@ -204,7 +218,8 @@ async function run() {
             await client.connect();
             const user = req.body;
             // console.log(user.product.seats);
-            const filter = { email: user.email, productId: new ObjectId(user.productId) };
+            const filter = { studentemail: user.studentemail, productId: user.productId };
+            console.log(filter);
             const options = { upsert: true };
             const filter2 = { _id: new ObjectId(user.productId) }
             const updateDoc = {
@@ -212,7 +227,7 @@ async function run() {
                     ...req.body,
                 }
             };
-            const seats = (user.product.seats - 1).toString()
+            const seats = (user.seats - 1).toString()
             const updateDoc2 = {
                 $set: {
                     seats: seats
