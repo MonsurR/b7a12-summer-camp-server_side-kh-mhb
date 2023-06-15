@@ -135,6 +135,20 @@ async function run() {
             res.send(classes);
 
         })
+        app.get('/myselected', verifyJWT, async (req, res) => {
+            await client.connect();
+            const email = req.query.email;
+            console.log("in myslected")
+            if (email !== req.decoded.email) {
+                res.status(403).send({ message: 'forbidden access' })
+            }
+            const query = {
+                studentemail: email
+            }
+            const products = await selectcollection.find(query).toArray();
+            console.log(products);
+            res.send(products);
+        })
         app.get('/jwt', async (req, res) => {
             await client.connect();
             const email = req.query.email;
