@@ -152,9 +152,9 @@ async function run() {
                     }
                 }
                 const result = await userCollection.updateMany(filter, updateDoc);
-                const result2 = await productCollection.updateMany(filter, updateDoc);
-                // console.log(result)
-                if (result.acknowledged && result2.acknowledged) {
+
+                console.log("here")
+                if (result.acknowledged) {
                     res.send({ msg: true })
                 }
                 else {
@@ -236,9 +236,9 @@ async function run() {
                     }
                 }
                 const result = await userCollection.updateMany(filter, updateDoc);
-                const result2 = await productCollection.updateMany(filter, updateDoc);
+
                 // console.log(result)
-                if (result.acknowledged && result2.acknowledged) {
+                if (result.acknowledged) {
                     res.send({ msg: true })
                 }
                 else {
