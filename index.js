@@ -23,7 +23,7 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
-
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 function verifyJWT(req, res, next) {
     // console.log(`token inside verifyjwt `, req.headers.authorization);    
     const authHeader = req.headers.authorization;
@@ -55,6 +55,10 @@ async function run() {
 
         const userCollection = client.db('sterio').collection('user');
         const productCollection = client.db('sterio').collection('product');
+        const selectcollection = client.db('sterio').collection('select');
+        const enrolledcollection = client.db('sterio').collection('enroll');
+
+
 
         app.put('/user', async (req, res) => {
             await client.connect();
@@ -117,6 +121,20 @@ async function run() {
             res.send(classes);
 
         })
+        app.get('/allclassesserial', async (req, res) => {
+            await client.connect();
+            const filter = { status: 'Accepted' }
+            let classes = [];
+            console.log(req.query.query)
+            if (req.query.query) {
+                classes = await productCollection.find(filter).sort({ seats: -1 }).limit(6).toArray();
+            }
+            else {
+                classes = await productCollection.find(filter).sort({ seats: -1 }).toArray();
+            }
+            res.send(classes);
+
+        })
         app.get('/jwt', async (req, res) => {
             await client.connect();
             const email = req.query.email;
@@ -153,7 +171,7 @@ async function run() {
                 }
                 const result = await userCollection.updateMany(filter, updateDoc);
 
-                console.log("here")
+                // console.log("here")
                 if (result.acknowledged) {
                     res.send({ msg: true })
                 }
@@ -167,6 +185,62 @@ async function run() {
                 res.send({ msg: false })
             }
 
+        })
+        app.put('/payment', async (req, res) => {
+            await client.connect();
+            const user = req.body;
+            // console.log(user.product.seats);
+            const filter = { email: user.email, productId: new ObjectId(user.productId) };
+            const options = { upsert: true };
+            const filter2 = { _id: new ObjectId(user.productId) }
+            const updateDoc = {
+                $set: {
+                    ...req.body,
+                }
+            };
+            const seats = (user.product.seats - 1).toString()
+            const updateDoc2 = {
+                $set: {
+                    seats: seats
+                }
+            };
+            const result = await enrolledcollection.updateOne(filter, updateDoc, options);
+            const result3 = await productCollection.updateOne(filter2, updateDoc2);
+            res.send({ result, result3 })
+        })
+
+        app.post("/create-payment-intent", async (req, res) => {
+            await client.connect()
+
+            const booking = req.body;
+            const price = parseInt(booking.price);
+            //Here multiplying by 1 instead of 100 because if the number is big ,it is a problem to handle for stripe 
+            const amount = price * 1;
+            console.log(price)
+            console.log(amount)
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: "usd",
+                "payment_method_types": [
+                    "card"
+                ],
+
+            });
+            // console.log(paymentIntent.client_secret)
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+
+            })
+        })
+        app.get('/bookings/:id', async (req, res) => {
+            await client.connect()
+            const id = req.params.id;
+
+            const query = { _id: new ObjectId(id) };
+            const booking = await productCollection.findOne(query);
+            console.log(booking);
+
+            res.send(booking);
         })
         app.put('/makeaccept', verifyAdmin, async (req, res) => {
             await client.connect();
@@ -193,6 +267,58 @@ async function run() {
                 // console.log('this is not admin');
                 res.send({ msg: false })
             }
+
+        })
+        app.put('/selectCourse', async (req, res) => {
+            await client.connect();
+            console.log(req.body);
+            const filter = { SRLnumber: req.body.SRLnumber, email: req.body.email }; console.log("here")
+            // console.log(req.body);
+            // const filter = { _id: new ObjectId(req.body.SRLnumber) }
+            const updateDoc = {
+                $set: {
+                    ...req.body
+                }
+            }
+            const options = { upsert: true };
+            const result2 = await selectcollection.updateOne(filter, updateDoc, options)
+            // const result = await productCollection.updateOne(filter, updateDoc);
+            // console.log(result)
+            if (result2.acknowledged) {
+                res.send({ msg: true })
+            }
+            else {
+                res.send({ msg: false })
+            }
+
+
+
+
+        })
+        app.put('/enrolledCourse', async (req, res) => {
+            await client.connect();
+            console.log(req.body);
+            const filter = { SRLnumber: req.body.SRLnumber, email: req.body.email }; console.log("here")
+            // console.log(req.body);
+            // const filter = { _id: new ObjectId(req.body.SRLnumber) }
+            const updateDoc = {
+                $set: {
+                    ...req.body
+                }
+            }
+            const options = { upsert: true };
+            const result2 = await selectcollection.updateOne(filter, updateDoc, options)
+            // const result = await productCollection.updateOne(filter, updateDoc);
+            // console.log(result)
+            if (result2.acknowledged) {
+                res.send({ msg: true })
+            }
+            else {
+                res.send({ msg: false })
+            }
+
+
+
 
         })
         app.put('/makedeny', verifyAdmin, async (req, res) => {
