@@ -111,7 +111,12 @@ async function run() {
             }
             next();
         }
+        app.get('/allclasses', async (req, res) => {
+            await client.connect();
+            const classes = await productCollection.find().toArray();
+            res.send(classes);
 
+        })
         app.get('/jwt', async (req, res) => {
             await client.connect();
             const email = req.query.email;
@@ -124,6 +129,128 @@ async function run() {
             }
 
             res.status(403).send({ accessToken: '' })
+        })
+        app.get('/user', async (req, res) => {
+            await client.connect();
+
+            const email = req.query.email;
+            // const query = {
+            //     role: req.query.role
+            // }
+            const products = await userCollection.find().toArray();
+            res.send(products);
+        })
+        app.put('/makeadmin', verifyAdmin, async (req, res) => {
+            await client.connect();
+
+            if (req.role === 'admin') {
+                // console.log(req.body);
+                const filter = { email: req.body.email }
+                const updateDoc = {
+                    $set: {
+                        role: 'admin'
+                    }
+                }
+                const result = await userCollection.updateMany(filter, updateDoc);
+                const result2 = await productCollection.updateMany(filter, updateDoc);
+                // console.log(result)
+                if (result.acknowledged && result2.acknowledged) {
+                    res.send({ msg: true })
+                }
+                else {
+                    res.send({ msg: false })
+                }
+
+            }
+            else {
+                // console.log('this is not admin');
+                res.send({ msg: false })
+            }
+
+        })
+        app.put('/makeaccept', verifyAdmin, async (req, res) => {
+            await client.connect();
+
+            if (req.role === 'admin') {
+                // console.log(req.body);
+                const filter = { email: req.body.email }
+                const updateDoc = {
+                    $set: {
+                        status: 'Accepted'
+                    }
+                }
+                const result = await productCollection.updateMany(filter, updateDoc);
+                // console.log(result)
+                if (result.acknowledged) {
+                    res.send({ msg: true })
+                }
+                else {
+                    res.send({ msg: false })
+                }
+
+            }
+            else {
+                // console.log('this is not admin');
+                res.send({ msg: false })
+            }
+
+        })
+        app.put('/makedeny', verifyAdmin, async (req, res) => {
+            await client.connect();
+
+            if (req.role === 'admin') {
+                // console.log(req.body);
+                const filter = { email: req.body.email }
+                const updateDoc = {
+                    $set: {
+                        status: 'Denied',
+                        feedback: req.body.feedback
+
+                    }
+                }
+                const result = await productCollection.updateMany(filter, updateDoc);
+                // console.log(result)
+                if (result.acknowledged) {
+                    res.send({ msg: true })
+                }
+                else {
+                    res.send({ msg: false })
+                }
+
+            }
+            else {
+                // console.log('this is not admin');
+                res.send({ msg: false })
+            }
+
+        })
+        app.put('/makeinstructor', verifyAdmin, async (req, res) => {
+            await client.connect();
+
+            if (req.role === 'admin') {
+                // console.log(req.body);
+                const filter = { email: req.body.email }
+                const updateDoc = {
+                    $set: {
+                        role: 'Seller'
+                    }
+                }
+                const result = await userCollection.updateMany(filter, updateDoc);
+                const result2 = await productCollection.updateMany(filter, updateDoc);
+                // console.log(result)
+                if (result.acknowledged && result2.acknowledged) {
+                    res.send({ msg: true })
+                }
+                else {
+                    res.send({ msg: false })
+                }
+
+            }
+            else {
+                // console.log('this is not admin');
+                res.send({ msg: false })
+            }
+
         })
         app.get('/user/seller', verifySeller, async (req, res) => {
             // console.log(req?.role, req.verified)
