@@ -170,10 +170,10 @@ async function run() {
         })
         app.put('/makeaccept', verifyAdmin, async (req, res) => {
             await client.connect();
-
+            console.log(req.body);
             if (req.role === 'admin') {
                 // console.log(req.body);
-                const filter = { email: req.body.email }
+                const filter = { _id: new ObjectId(req.body.product._id) }
                 const updateDoc = {
                     $set: {
                         status: 'Accepted'
@@ -200,7 +200,7 @@ async function run() {
 
             if (req.role === 'admin') {
                 // console.log(req.body);
-                const filter = { email: req.body.email }
+                const filter = { _id: new ObjectId(req.body.product._id) }
                 const updateDoc = {
                     $set: {
                         status: 'Denied',
