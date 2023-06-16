@@ -214,6 +214,13 @@ async function run() {
             }
 
         })
+        app.get('/getinstructors', async (req, res) => {
+            await client.connect();
+            const filter = { role: 'Seller' }
+            const teachers = await userCollection.find(filter).limit(6).toArray();
+            res.send(teachers);
+        })
+
         app.put('/payment', async (req, res) => {
             await client.connect();
             const user = req.body;
