@@ -1,12 +1,17 @@
 const express = require('express')
-const app = express()
-const port = process.env.PORT || 5000
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-require('dotenv').config()
+
+
 const cors = require('cors')
+const app = express()
+// app.use(cors({ origin: 'https://streio-time.web.app' }))
+app.use(cors())
+
+require('dotenv').config()
+const port = process.env.PORT || 5000;
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+
 const jwt = require('jsonwebtoken');
 const { query } = require('express');
-app.use(cors())
 app.use(express.json())
 
 
@@ -52,6 +57,7 @@ function verifyJWT(req, res, next) {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
+        await client.connect();
 
         const userCollection = client.db('sterio').collection('user');
         const productCollection = client.db('sterio').collection('product');
@@ -83,6 +89,11 @@ async function run() {
         const verifySeller = async (req, res, next) => {
             await client.connect();
             // console.log(req.query.email)
+            if (req.query.email === undefined) {
+                req.role = ''
+                req.verified = false
+                next()
+            }
             const email = req.query.email;
             const query = { email: email };
             const user = await userCollection.findOne(query);
@@ -103,6 +114,11 @@ async function run() {
         const verifyAdmin = async (req, res, next) => {
             // console.log(req.query.email)
             await client.connect();
+            if (req.query.email === undefined) {
+                req.role = ''
+                req.verified = false
+                next()
+            }
 
             const email = req.query.email;
             const query = { email: email };
