@@ -57,7 +57,7 @@ function verifyJWT(req, res, next) {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // //await client.connect();
 
         const userCollection = client.db('sterio').collection('user');
         const productCollection = client.db('sterio').collection('product');
@@ -67,7 +67,7 @@ async function run() {
 
 
         app.put('/user', async (req, res) => {
-            await client.connect();
+            // //await client.connect();
             const user = req.body;
             const filter = { email: user.email };
             const options = { upsert: true };
@@ -87,7 +87,7 @@ async function run() {
 
         })
         const verifySeller = async (req, res, next) => {
-            await client.connect();
+            //await client.connect();
             // console.log(req.query.email)
             if (req.query.email === undefined) {
                 req.role = ''
@@ -113,7 +113,7 @@ async function run() {
         }
         const verifyAdmin = async (req, res, next) => {
             // console.log(req.query.email)
-            await client.connect();
+            //await client.connect();
             if (req.query.email === undefined) {
                 req.role = ''
                 req.verified = false
@@ -132,13 +132,13 @@ async function run() {
             next();
         }
         app.get('/allclasses', async (req, res) => {
-            await client.connect();
+            //await client.connect();
             const classes = await productCollection.find().toArray();
             res.send(classes);
 
         })
         app.get('/allclassesserial', async (req, res) => {
-            await client.connect();
+            //await client.connect();
             const filter = { status: 'Accepted' }
             let classes = [];
             console.log(req.query.query)
@@ -152,7 +152,7 @@ async function run() {
 
         })
         app.get('/myselected', verifyJWT, async (req, res) => {
-            await client.connect();
+            //await client.connect();
             const email = req.query.email;
             console.log("in myslected")
             if (email !== req.decoded.email) {
@@ -166,7 +166,7 @@ async function run() {
             res.send(products);
         })
         app.get('/myenrolled', verifyJWT, async (req, res) => {
-            await client.connect();
+            //await client.connect();
             const email = req.query.email;
             console.log("in myslected")
             if (email !== req.decoded.email) {
@@ -180,7 +180,7 @@ async function run() {
             res.send(products);
         })
         app.get('/jwt', async (req, res) => {
-            await client.connect();
+            //await client.connect();
             const email = req.query.email;
             const query = { email: email }
             const user = await userCollection.findOne(query)
@@ -193,7 +193,7 @@ async function run() {
             res.status(403).send({ accessToken: '' })
         })
         app.get('/user', async (req, res) => {
-            await client.connect();
+            //await client.connect();
 
             const email = req.query.email;
             // const query = {
@@ -203,7 +203,7 @@ async function run() {
             res.send(products);
         })
         app.put('/makeadmin', verifyAdmin, async (req, res) => {
-            await client.connect();
+            //await client.connect();
 
             if (req.role === 'admin') {
                 // console.log(req.body);
@@ -231,14 +231,14 @@ async function run() {
 
         })
         app.get('/getinstructors', async (req, res) => {
-            await client.connect();
+            //await client.connect();
             const filter = { role: 'Seller' }
             const teachers = await userCollection.find(filter).limit(6).toArray();
             res.send(teachers);
         })
 
         app.put('/payment', async (req, res) => {
-            await client.connect();
+            //await client.connect();
             const user = req.body;
             // console.log(user.product.seats);
             const filter = { studentemail: user.studentemail, productId: user.productId };
@@ -295,7 +295,7 @@ async function run() {
             res.send(booking);
         })
         app.put('/makeaccept', verifyAdmin, async (req, res) => {
-            await client.connect();
+            //await client.connect();
             console.log(req.body);
             if (req.role === 'admin') {
                 // console.log(req.body);
@@ -322,7 +322,7 @@ async function run() {
 
         })
         app.put('/selectCourse', async (req, res) => {
-            await client.connect();
+            //await client.connect();
             console.log(req.body);
             const filter = { SRLnumber: req.body.SRLnumber, email: req.body.email }; console.log("here")
             // console.log(req.body);
@@ -348,7 +348,7 @@ async function run() {
 
         })
         app.put('/enrolledCourse', async (req, res) => {
-            await client.connect();
+            //await client.connect();
             console.log(req.body);
             const filter = { SRLnumber: req.body.SRLnumber, email: req.body.email }; console.log("here")
             // console.log(req.body);
@@ -374,7 +374,7 @@ async function run() {
 
         })
         app.put('/enrolledCourseDelete', async (req, res) => {
-            await client.connect();
+            //await client.connect();
             console.log('on delete')
             console.log(req.body)
             const filter = { _id: new ObjectId(req.body._id), studentemail: req.body.studentemail };
@@ -406,7 +406,7 @@ async function run() {
 
         })
         app.put('/makedeny', verifyAdmin, async (req, res) => {
-            await client.connect();
+            //await client.connect();
 
             if (req.role === 'admin') {
                 // console.log(req.body);
@@ -435,7 +435,7 @@ async function run() {
 
         })
         app.put('/makeinstructor', verifyAdmin, async (req, res) => {
-            await client.connect();
+            //await client.connect();
 
             if (req.role === 'admin') {
                 // console.log(req.body);
@@ -464,19 +464,19 @@ async function run() {
         })
         app.get('/user/seller', verifySeller, async (req, res) => {
             // console.log(req?.role, req.verified)
-            await client.connect();
+            //await client.connect();
             res.send({ isSeller: req?.role === 'Seller', verified: req.verified });
 
         })
         app.post('/productadd', async (req, res) => {
-            await client.connect();
+            //await client.connect();
             const data = req.body;
             data.date = new Date(Date.now()).toISOString();
             const resut = await productCollection.insertOne(data);
             res.send(resut);
         })
         app.get('/product', verifyJWT, async (req, res) => {
-            await client.connect();
+            //await client.connect();
 
             const email = req.query.email;
 
@@ -491,7 +491,7 @@ async function run() {
         })
         app.get('/user/admin', verifyAdmin, async (req, res) => {
             // console.log(req?.role)
-            await client.connect();
+            //await client.connect();
             res.send({ isAdmin: req?.role === 'admin' });
 
         })
@@ -499,7 +499,7 @@ async function run() {
 
     } finally {
         // Ensures that the client will close when you finish/error
-        await client.close();
+        // await client.close();
     }
 }
 
