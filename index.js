@@ -227,10 +227,10 @@ async function run() {
                     ...req.body,
                 }
             };
-            const seats = (user.seats - 1).toString()
+            // const seats = (user.seats - 1).toString()
             const updateDoc2 = {
                 $set: {
-                    seats: seats
+                    seats: user.seats.toString()
                 }
             };
             const result = await enrolledcollection.updateOne(filter, updateDoc, options);
@@ -332,13 +332,45 @@ async function run() {
             // const filter = { _id: new ObjectId(req.body.SRLnumber) }
             const updateDoc = {
                 $set: {
-                    ...req.body
+                    ...req.body,
                 }
             }
             const options = { upsert: true };
             const result2 = await selectcollection.updateOne(filter, updateDoc, options)
             // const result = await productCollection.updateOne(filter, updateDoc);
             // console.log(result)
+            if (result2.acknowledged) {
+                res.send({ msg: true })
+            }
+            else {
+                res.send({ msg: false })
+            }
+
+
+
+
+        })
+        app.put('/enrolledCourseDelete', async (req, res) => {
+            await client.connect();
+            console.log('on delete')
+            console.log(req.body)
+            const filter = { _id: new ObjectId(req.body._id), studentemail: req.body.studentemail };
+            const filter2 = { _id: new ObjectId(req.body.productId) }
+            // console.log(req.body);
+            // const filter = { _id: new ObjectId(req.body.SRLnumber) }
+            // const seats = (req.body.seats + 1).toString()
+
+            const document = await productCollection.findOne(filter2); // Retrieve the document from MongoDB
+            const currentSeats = parseInt(document.seats); // Convert the seats value to a number
+            const updatedSeats = currentSeats + 1;
+
+            const updateDoc2 = {
+                $set: {
+                    seats: updatedSeats.toString() // Convert the seats value back to a string
+                }
+            };
+            const result = await enrolledcollection.deleteOne(filter)
+            const result2 = await productCollection.updateOne(filter2, updateDoc2)
             if (result2.acknowledged) {
                 res.send({ msg: true })
             }
